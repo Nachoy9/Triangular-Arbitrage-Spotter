@@ -1,4 +1,4 @@
-This is a python program for spotting triangular arbitrage opportunities on Binance DEX. It can be modified to spot opportunities on other DEXs too.
+This is a python program for spotting triangular arbitrage opportunities on Binance CEX. It can be modified to spot opportunities on other DEXs too.
 
 Information about Binance API can be found under https://binance-docs.github.io/apidocs/spot/en/#general-info.
 
@@ -13,4 +13,5 @@ In order to use the program for the very first time:
 Once you have updated tradeable structured pair list (Step 2 and 3), there is no need to run them again until Binance adds a new trading pair.
 
 Note 1: Step 2 will take a few minutes to complete.
+
 Note 2: In order to update tradeable structured pair list you need to run Step 1 first.

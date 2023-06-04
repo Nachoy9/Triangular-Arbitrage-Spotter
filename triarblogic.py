@@ -2,24 +2,23 @@
 
 import requests
 import json
-import time
 
 exchange_tokens_info = "https://api.binance.com/api/v3/exchangeInfo"
 exchange_tokens_prices = "https://api.binance.com/api/v3/ticker/bookTicker"
 
 nowFormat = "%Y-%m-%d %H:%M:%S"
 
-#This function will request data from the desired API
-def get_request(url):
 
+# This function will request data from the desired API
+def get_request(url):
     req = requests.get(url)
     json_resp = json.loads(req.text)
 
     return json_resp
 
+
 # This function will get the pairs with "TRADING" status
 def get_tradeable_tokens():
-
     print("Updating tradeable token list")
 
     token_list = get_request(exchange_tokens_info)
@@ -36,9 +35,9 @@ def get_tradeable_tokens():
 
     return tradeable_tokens
 
+
 # This function will structure the list of pairs by building the triage of pairs
 def structure_triangular_pairs():
-
     print("Structuring list")
 
     remove_duplicate_list = []
@@ -92,7 +91,6 @@ def structure_triangular_pairs():
                                 unique_item = ''.join(sorted(combine_all))
 
                                 if unique_item not in remove_duplicate_list:
-
                                     match_dict = {
                                         "pairA_base": pairA_base,
                                         "pairB_base": pairB_base,
@@ -114,9 +112,9 @@ def structure_triangular_pairs():
     with open("structured_triangular_pairs.json", "w") as fp:
         json.dump(triangular_pairs_list, fp)
 
+
 # This function will keep only those pairs with "TRADING" status
 def get_tradeable_structured_pairs(tradeable_tokens):
-
     with open("structured_triangular_pairs.json") as json_file:
         structured_pairs = json.load(json_file)
 
@@ -124,15 +122,16 @@ def get_tradeable_structured_pairs(tradeable_tokens):
 
     for triangular_pair in structured_pairs:
 
-        if triangular_pair["pairA"] in tradeable_tokens and triangular_pair["pairB"] in tradeable_tokens and triangular_pair["pairC"] in tradeable_tokens:
+        if triangular_pair["pairA"] in tradeable_tokens and triangular_pair["pairB"] in tradeable_tokens and \
+                triangular_pair["pairC"] in tradeable_tokens:
             tradeable_structured_pairs.append(triangular_pair)
 
     with open("tradeable_structured_triangular_pairs.json", "w") as fp:
         json.dump(tradeable_structured_pairs, fp)
 
+
 # This function will spot arbitrage opportunities for X as pair quote
 def spot_arbitrage_opportunities_xcoin_quote(coin):
-
     coin_exist = False
 
     with open("tradeable_structured_triangular_pairs.json") as json_file:
@@ -150,18 +149,18 @@ def spot_arbitrage_opportunities_xcoin_quote(coin):
             surface_arb = calc_triangular_arb_surface_rate(triangular_pairs, pair_prices)
 
             if len(surface_arb) > 0:
-                real_rate_arb =calc_orderbook_depth(surface_arb)
+                real_rate_arb = calc_orderbook_depth(surface_arb)
                 print(real_rate_arb)
 
                 # Pause so we don't saturate the API
                 # time.sleep(0.1)
 
     if not coin_exist:
-        print(coin,"does not exist.")
+        print(coin, "does not exist.")
+
 
 # This function will spot arbitrage opportunities for X as pair base
 def spot_arbitrage_opportunities_xcoin_base(coin):
-
     coin_exist = False
 
     with open("tradeable_structured_triangular_pairs.json") as json_file:
@@ -179,18 +178,18 @@ def spot_arbitrage_opportunities_xcoin_base(coin):
             surface_arb = calc_triangular_arb_surface_rate(triangular_pairs, pair_prices)
 
             if len(surface_arb) > 0:
-                real_rate_arb =calc_orderbook_depth(surface_arb)
+                real_rate_arb = calc_orderbook_depth(surface_arb)
                 print(real_rate_arb)
 
                 # Pause so we don't saturate the API
                 # time.sleep(0.1)
 
     if not coin_exist:
-        print(coin,"does not exist.")
+        print(coin, "does not exist.")
+
 
 # This function will get the price relation of each pair
 def get_prices(triangular_pairs, token_prices):
-
     pairA = triangular_pairs["pairA"]
     pairB = triangular_pairs["pairB"]
     pairC = triangular_pairs["pairC"]
@@ -220,6 +219,7 @@ def get_prices(triangular_pairs, token_prices):
         "pairC_ask": pairC_ask,
         "pairC_bid": pairC_bid,
     }
+
 
 # This function will calculate the surface rate
 def calc_triangular_arb_surface_rate(triangular_pairs, pair_prices):
@@ -516,6 +516,7 @@ def calc_triangular_arb_surface_rate(triangular_pairs, pair_prices):
 
     return surface_dict
 
+
 # This function will calculate the orderbook depth
 def calc_orderbook_depth(surface_arb):
 
@@ -552,12 +553,9 @@ def calc_orderbook_depth(surface_arb):
     acquired_coin_t3 = calculate_acquired_tokens(acquired_coin_t2, depth_3_ref_prices)
 
     pnl = acquired_coin_t3 - starting_amount
-    pnl_perc = (pnl/starting_amount) * 100 if pnl != 0 else 0
+    pnl_perc = (pnl / starting_amount) * 100 if pnl != 0 else 0
 
-    print("\n",contract_1,"-",contract_2,"-",contract_3)
-    print(surface_arb["contract_2"])
-    print(surface_arb["contract_2"])
-    print(surface_arb["contract_2"])
+    print("\n", contract_1, "-", contract_2, "-", contract_3)
 
     if pnl_perc > 0:
         trade_dict = {
@@ -570,12 +568,15 @@ def calc_orderbook_depth(surface_arb):
             "contract_2_dir": contract_2_direction,
             "contract_3_dir": contract_3_direction
         }
+        print("Starting amount:", starting_amount)
+        print("Ending amount:", acquired_coin_t3)
         return trade_dict
     else:
         return "No depth or trade for loss"
 
-def calculate_acquired_tokens(amount_in, ref_depth):
 
+# This function will calculate the adquired tokens after each swap
+def calculate_acquired_tokens(amount_in, ref_depth):
     trading_balance = amount_in
     quantity_bought = 0
     acquired_tokens = 0
@@ -605,14 +606,14 @@ def calculate_acquired_tokens(amount_in, ref_depth):
         if counts == len(ref_depth):
             return 0
 
-def ref_orderbook(prices, direction):
 
+# This function will get the orderbook
+def ref_orderbook(prices, direction):
     main_price_list = []
 
     if direction == "base_to_quote":
 
         for price in prices["bids"]:
-
             bid_price = float(price[0])
             adj_price = 1 * bid_price if bid_price != 0 else 0
             adj_quantity = float(price[1])
@@ -621,7 +622,6 @@ def ref_orderbook(prices, direction):
     elif direction == "quote_to_base":
 
         for price in prices["asks"]:
-
             ask_price = float(price[0])
             adj_price = 1 / ask_price if ask_price != 0 else 0
             adj_quantity = float(price[1])
